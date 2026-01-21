@@ -1,0 +1,25 @@
+{
+  "name": "snapkit-blueprint-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "snapkit-blueprint-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:embeddings": "tsx scripts/generate-embeddings.ts",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "dotenv": "^17.2.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
