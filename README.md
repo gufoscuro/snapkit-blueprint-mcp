@@ -1,7 +1,7 @@
 
 # SnapKit Blueprint MCP
 
-A Model Context Protocol (MCP) server for semantic search over architectural guidelines and implementation rules. Part of the [SnapKit](https://github.com/user/snapkit) ecosystem.
+A Model Context Protocol (MCP) server for semantic search over architectural guidelines and implementation rules. Part of the [SnapKit](https://github.com/gufoscuro/snapkit) ecosystem.
 
 ## Relationship with SnapKit
 
@@ -9,7 +9,7 @@ This MCP server is designed to work alongside **SnapKit**, an AI-assisted custom
 
 When integrated with Claude Code or other MCP-compatible tools, AI assistants can query implementation patterns, component guidelines, and architecture decisions—enabling them to generate code that follows SnapKit conventions without manual context sharing.
 
-See the [SnapKit MCP Server Ecosystem](https://github.com/user/snapkit#mcp-server-ecosystem) for how this fits into the broader tooling.
+See the [SnapKit MCP Server Ecosystem](https://github.com/gufoscuro/snapkit#mcp-server-ecosystem) for how this fits into the broader tooling.
 
 ## Features
 
