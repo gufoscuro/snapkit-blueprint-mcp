@@ -1,12 +1,22 @@
 
 # SnapKit Blueprint MCP
 
-A Model Context Protocol (MCP) server for semantic search over SnapKit architectural guidelines and implementation rules.
+A Model Context Protocol (MCP) server for semantic search over architectural guidelines and implementation rules. Part of the [SnapKit](https://github.com/user/snapkit) ecosystem.
+
+## Relationship with SnapKit
+
+This MCP server is designed to work alongside **SnapKit**, an AI-assisted customization framework built on SvelteKit. While SnapKit provides the runtime architecture (page registry, component discovery, state sharing), this server exposes the **architectural knowledge** to AI agents.
+
+When integrated with Claude Code or other MCP-compatible tools, AI assistants can query implementation patterns, component guidelines, and architecture decisions—enabling them to generate code that follows SnapKit conventions without manual context sharing.
+
+See the [SnapKit MCP Server Ecosystem](https://github.com/user/snapkit#mcp-server-ecosystem) for how this fits into the broader tooling.
 
 ## Features
-- Semantic search over markdown guidelines
+
+- Semantic search over markdown documentation
 - Embedding generation using Google Gemini API
 - Fast in-memory vector search
+- Configurable content directory for custom documentation
 
 ## Setup
 
@@ -15,9 +25,10 @@ A Model Context Protocol (MCP) server for semantic search over SnapKit architect
 npm install
 ```
 
-2. Create a `.env` file with your Google API key:
+2. Create a `.env` file with your configuration:
 ```bash
 GOOGLE_API_KEY=your_api_key_here
+CONTENT_DIR=/path/to/your/docs  # Optional
 ```
 
 3. Generate embeddings:
@@ -30,9 +41,31 @@ npm run build:embeddings
 npm run build
 ```
 
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_API_KEY` | Yes | Google Gemini API key for generating and querying embeddings |
+| `CONTENT_DIR` | No | Path to the folder containing markdown documentation. Defaults to `./content` |
+| `EMBEDDINGS_PATH` | No | Path to the embeddings JSON file. Defaults to `./embeddings/embeddings.json` |
+
+### Using a Custom Content Directory
+
+You can point to any folder containing markdown files:
+
+```bash
+# Using an environment variable
+CONTENT_DIR=/path/to/snapkit/.blueprints npm run build:embeddings
+
+# Or in your .env file
+CONTENT_DIR=/path/to/snapkit/.blueprints
+```
+
+The folder must exist, otherwise the embedding generation will fail with an error.
+
 ## Usage with Claude Code
 
-To use this MCP server from another repository with Claude Code, add it to your Claude Code MCP configuration file (`~/.config/claude-code/mcp_config.json`):
+Add this MCP server to your Claude Code configuration (`~/.config/claude-code/mcp_config.json`):
 
 ```json
 {
@@ -50,13 +83,13 @@ To use this MCP server from another repository with Claude Code, add it to your 
 }
 ```
 
-Alternatively, if you want to use it via npx, you can link it globally first:
+Alternatively, link it globally:
 
 ```bash
 # In this repository
 npm link
 
-# Then in your MCP config use:
+# Then in your MCP config:
 {
   "mcpServers": {
     "snapkit-blueprint": {
@@ -70,13 +103,13 @@ npm link
 }
 ```
 
-After configuring, restart Claude Code. The `search_blueprint` tool will be available in your other repositories.
-
-## Environment Variables
-- `GOOGLE_API_KEY` (required for embedding generation)
+After configuring, restart Claude Code. The `search_blueprint` tool will be available.
 
 ## Project Structure
-- `content/` - Markdown guidelines
-- `embeddings/` - Generated embeddings
-- `scripts/` - Embedding generation script
-- `src/` - MCP server and search logic
+
+```
+├── content/           # Default markdown documentation
+├── embeddings/        # Generated embeddings (auto-created)
+├── scripts/           # Embedding generation script
+└── src/               # MCP server and search logic
+```
