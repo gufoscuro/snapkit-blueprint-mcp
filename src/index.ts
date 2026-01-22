@@ -5,14 +5,14 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ debug: false });
 import fs from 'fs/promises';
 import path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EmbeddingsFile, SearchResult } from './types.js';
 import { searchChunks } from './search.js';
 
-const EMBEDDINGS_PATH = path.resolve('embeddings/embeddings.json');
+const EMBEDDINGS_PATH = process.env.EMBEDDINGS_PATH || path.resolve('embeddings/embeddings.json');
 let embeddings: EmbeddingsFile | null = null;
 
 async function loadEmbeddings() {

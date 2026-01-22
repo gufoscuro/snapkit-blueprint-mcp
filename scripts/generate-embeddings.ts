@@ -6,9 +6,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { fileURLToPath } from 'url';
 
-const CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../content');
+const DEFAULT_CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../content');
+const CONTENT_DIR = process.env.CONTENT_DIR ? path.resolve(process.env.CONTENT_DIR) : DEFAULT_CONTENT_DIR;
 const OUTPUT_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../embeddings/embeddings.json');
 const MODEL = 'text-embedding-004';
+
+async function validateContentDir(): Promise<void> {
+  try {
+    const stat = await fs.stat(CONTENT_DIR);
+    if (!stat.isDirectory()) {
+      console.error(`CONTENT_DIR is not a directory: ${CONTENT_DIR}`);
+      process.exit(1);
+    }
+  } catch (e) {
+    console.error(`CONTENT_DIR does not exist: ${CONTENT_DIR}`);
+    process.exit(1);
+  }
+}
 
 function splitMarkdownByHeadings(content: string): { text: string, headings: string[], section: string }[] {
   // Simple splitter: splits by H2 (##) and includes parent H1
@@ -59,6 +73,7 @@ async function main() {
     console.error('Missing GOOGLE_API_KEY');
     process.exit(1);
   }
+  await validateContentDir();
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   const embedModel = genAI.getGenerativeModel({ model: MODEL });
   const files = await findMarkdownFiles(CONTENT_DIR);
