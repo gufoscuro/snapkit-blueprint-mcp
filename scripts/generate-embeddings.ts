@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const DEFAULT_CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../content');
 const CONTENT_DIR = process.env.CONTENT_DIR ? path.resolve(process.env.CONTENT_DIR) : DEFAULT_CONTENT_DIR;
 const OUTPUT_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../embeddings/embeddings.json');
-const MODEL = 'text-embedding-004';
+const MODEL = 'gemini-embedding-001';
 
 async function validateContentDir(): Promise<void> {
   try {
