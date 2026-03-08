@@ -8,11 +8,11 @@ import dotenv from 'dotenv';
 dotenv.config({ debug: false });
 import fs from 'fs/promises';
 import path from 'path';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EmbeddingsFile, SearchResult } from './types.js';
 import { searchChunks } from './search.js';
 
 const EMBEDDINGS_PATH = process.env.EMBEDDINGS_PATH || path.resolve('embeddings/embeddings.json');
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 let embeddings: EmbeddingsFile | null = null;
 
 async function loadEmbeddings() {
@@ -25,13 +25,22 @@ async function loadEmbeddings() {
   }
 }
 
+async function getEmbedding(text: string, model: string): Promise<number[]> {
+  const resp = await fetch(`${OLLAMA_BASE_URL}/api/embed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, input: text }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Ollama embed failed (${resp.status}): ${await resp.text()}`);
+  }
+  const data = await resp.json() as { embeddings: number[][] };
+  return data.embeddings[0];
+}
+
 async function executeSearch(query: string, limit = 5): Promise<{ results: SearchResult[] }> {
   if (!embeddings) throw new Error('Embeddings not loaded');
-  if (!process.env.GOOGLE_API_KEY) throw new Error('Missing GOOGLE_API_KEY');
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const embedModel = genAI.getGenerativeModel({ model: embeddings.model });
-  const embedResp = await embedModel.embedContent(query.slice(0, 2000));
-  const queryEmbedding = embedResp.embedding.values;
+  const queryEmbedding = await getEmbedding(query.slice(0, 2000), embeddings.model);
   const results: SearchResult[] = searchChunks(embeddings.chunks, queryEmbedding, limit);
   return { results };
 }
@@ -40,6 +49,13 @@ async function main() {
   await loadEmbeddings();
   if (!embeddings) {
     console.error('No embeddings loaded. Please run `npm run build:embeddings` first.');
+    process.exit(1);
+  }
+
+  try {
+    await fetch(`${OLLAMA_BASE_URL}/api/version`);
+  } catch {
+    console.error(`Ollama server not reachable at ${OLLAMA_BASE_URL}. Is it running? (ollama serve)`);
     process.exit(1);
   }
 

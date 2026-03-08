@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { fileURLToPath } from 'url';
 
 const DEFAULT_CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../content');
 const CONTENT_DIR = process.env.CONTENT_DIR ? path.resolve(process.env.CONTENT_DIR) : DEFAULT_CONTENT_DIR;
 const OUTPUT_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../embeddings/embeddings.json');
-const MODEL = 'gemini-embedding-001';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+const MODEL = process.env.OLLAMA_EMBED_MODEL || 'nomic-embed-text';
 
 async function validateContentDir(): Promise<void> {
   try {
@@ -68,14 +68,21 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
   return results;
 }
 
-async function main() {
-  if (!process.env.GOOGLE_API_KEY) {
-    console.error('Missing GOOGLE_API_KEY');
-    process.exit(1);
+async function getEmbedding(text: string): Promise<number[]> {
+  const resp = await fetch(`${OLLAMA_BASE_URL}/api/embed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: MODEL, input: text }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Ollama embed failed (${resp.status}): ${await resp.text()}`);
   }
+  const data = await resp.json() as { embeddings: number[][] };
+  return data.embeddings[0];
+}
+
+async function main() {
   await validateContentDir();
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const embedModel = genAI.getGenerativeModel({ model: MODEL });
   const files = await findMarkdownFiles(CONTENT_DIR);
   const chunks = [];
   for (const filePath of files) {
@@ -86,9 +93,7 @@ async function main() {
       if (!section.text.trim()) continue;
       // Truncate to ~500 tokens (2000 chars)
       const chunkText = section.text.slice(0, 2000);
-      // Gemini embedding API
-      const embedResp = await embedModel.embedContent(chunkText);
-      const embedding = embedResp.embedding.values;
+      const embedding = await getEmbedding(chunkText);
       chunks.push({
         id: uuidv4(),
         content: chunkText,
